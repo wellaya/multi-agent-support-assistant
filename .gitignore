@@ -19,6 +19,9 @@ venv/
 # Claude Code local settings
 .claude/
 
+# Project spec (local only, not published)
+CLAUDE.md
+
 # Vector DB / local data (future stages)
 .chroma/
 data/
