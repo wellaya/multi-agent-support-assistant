@@ -1,8 +1,7 @@
 # Multi-Agent Support Assistant
 
 Portfolio project: an agentic email/chat support assistant with a
-provider-agnostic LLM layer, RAG, and safety guardrails. See
-[CLAUDE.md](CLAUDE.md) for the full design and build plan.
+provider-agnostic LLM layer, RAG, and safety guardrails.
 
 ## Setup
 
