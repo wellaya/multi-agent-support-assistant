@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtual environment
+venv/
+.venv/
+
+# Environment variables
+.env
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Claude Code local settings
+.claude/
+
+# Vector DB / local data (future stages)
+.chroma/
+data/
