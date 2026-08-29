@@ -7,5 +7,8 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-sonnet-4-5-20250929"
 
+    qdrant_url: str = "http://localhost:6333"
+    qdrant_collection: str = "support_kb"
+
 
 settings = Settings()
