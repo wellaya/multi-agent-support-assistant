@@ -15,3 +15,11 @@ class LLMProvider(ABC):
         messages: list of {"role": "user"|"assistant", "content": str}
         """
         raise NotImplementedError
+
+    @abstractmethod
+    async def generate_structured(self, messages: list[dict], schema: dict, **kwargs) -> dict:
+        """Send chat messages to the LLM and return a dict matching `schema`
+        (a JSON Schema object), using the provider's structured-output /
+        tool-use mechanism instead of free-text parsing.
+        """
+        raise NotImplementedError

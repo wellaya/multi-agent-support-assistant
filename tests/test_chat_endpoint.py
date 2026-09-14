@@ -9,6 +9,9 @@ class FakeProvider(LLMProvider):
     async def generate(self, messages: list[dict], **kwargs) -> str:
         return f"echo: {messages[-1]['content']}"
 
+    async def generate_structured(self, messages: list[dict], schema: dict, **kwargs) -> dict:
+        raise NotImplementedError
+
 
 app.dependency_overrides[get_provider] = lambda: FakeProvider()
 client = TestClient(app)
