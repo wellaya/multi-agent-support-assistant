@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from app.agent.graph import build_agent_graph
@@ -11,6 +11,7 @@ from app.providers.claude_provider import ClaudeProvider
 from app.rag.embeddings import Embedder
 from app.rag.retriever import retrieve
 from app.rag.vector_store import QdrantVectorStore
+from app.safety.store import SafetyStore
 
 router = APIRouter()
 
@@ -42,6 +43,11 @@ def get_agent_graph():
         return retrieve(query, store=store, embedder=embedder, top_k=3)
 
     return build_agent_graph(get_provider(), retrieve_fn)
+
+
+@lru_cache
+def get_safety_store() -> SafetyStore:
+    return SafetyStore(db_path=settings.safety_db_path)
 
 
 class ChatRequest(BaseModel):
@@ -78,6 +84,12 @@ class SupportResponse(BaseModel):
     action: str
     draft_response: str
     sources: list[str]
+    needs_approval: bool
+
+
+class ApprovalDecisionRequest(BaseModel):
+    approved: bool
+    note: str | None = None
 
 
 @router.get("/health")
@@ -106,8 +118,31 @@ async def rag_query(
 
 
 @router.post("/support/request", response_model=SupportResponse)
-async def support_request(request: SupportRequest, graph=Depends(get_agent_graph)):
+async def support_request(
+    request: SupportRequest,
+    graph=Depends(get_agent_graph),
+    safety_store: SafetyStore = Depends(get_safety_store),
+):
     result = await handle_request(request.message, graph)
+    needs_approval = result.action != "respond"
+
+    safety_store.log_audit(
+        message=request.message,
+        category=result.triage.category,
+        sentiment=result.triage.sentiment,
+        action=result.action,
+        input_flagged=result.input_flagged,
+        output_flagged=result.output_flagged,
+        flag_reasons=result.input_flag_reasons + result.output_flag_reasons,
+    )
+    if needs_approval:
+        safety_store.enqueue_approval(
+            message=request.message,
+            draft_response=result.draft_response,
+            category=result.triage.category,
+            action=result.action,
+        )
+
     return SupportResponse(
         category=result.triage.category,
         sentiment=result.triage.sentiment,
@@ -115,4 +150,27 @@ async def support_request(request: SupportRequest, graph=Depends(get_agent_graph
         action=result.action,
         draft_response=result.draft_response,
         sources=sorted({chunk.source for chunk in result.chunks}),
+        needs_approval=needs_approval,
     )
+
+
+@router.get("/approvals")
+async def list_approvals(safety_store: SafetyStore = Depends(get_safety_store)):
+    return {"results": safety_store.list_pending_approvals()}
+
+
+@router.post("/approvals/{approval_id}/decide")
+async def decide_approval(
+    approval_id: int,
+    request: ApprovalDecisionRequest,
+    safety_store: SafetyStore = Depends(get_safety_store),
+):
+    decided = safety_store.decide_approval(approval_id, request.approved, request.note)
+    if decided is None:
+        raise HTTPException(status_code=404, detail="Approval not found")
+    return decided
+
+
+@router.get("/audit")
+async def list_audit(limit: int = 50, safety_store: SafetyStore = Depends(get_safety_store)):
+    return {"results": safety_store.list_audit(limit=limit)}

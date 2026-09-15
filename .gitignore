@@ -24,3 +24,6 @@ CLAUDE.md
 
 # Vector DB local storage (Qdrant Docker volume)
 qdrant_storage/
+
+# Local runtime state (audit log / approval queue SQLite db)
+storage/

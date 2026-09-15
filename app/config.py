@@ -10,5 +10,7 @@ class Settings(BaseSettings):
     qdrant_url: str = "http://localhost:6333"
     qdrant_collection: str = "support_kb"
 
+    safety_db_path: str = "storage/app.db"
+
 
 settings = Settings()
