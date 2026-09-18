@@ -38,8 +38,9 @@ CASES: list[EvalCase] = [
         id="password_reset_4",
         message="I no longer have access to my old email, can you still help me reset my password?",
         expected_category="password_reset",
-        expected_action="respond",
-        expect_citation=True,
+        # Not "respond": the KB article says this needs manual identity
+        # verification, so escalating to a human is the correct outcome.
+        expected_action="escalate",
     ),
     # --- billing (in scope, calm) -> respond, cited ---
     EvalCase(
