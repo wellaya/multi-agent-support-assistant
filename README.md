@@ -1,5 +1,7 @@
 # Multi-Agent Support Assistant
 
+[![CI](https://github.com/wellaya/multi-agent-support-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/wellaya/multi-agent-support-assistant/actions/workflows/ci.yml)
+
 Portfolio project: an agentic email/chat support assistant with a
 provider-agnostic LLM layer, RAG, and safety guardrails.
 
